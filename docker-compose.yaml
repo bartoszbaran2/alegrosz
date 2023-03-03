@@ -1,5 +1,17 @@
 services:
-  backend:
+  webserver:
+    build:
+      context: ./webserver
+    ports:
+      - '8081:80'
+    depends_on:
+      - backend_core
+      - frontend
+    networks:
+      - backend_core_network
+      - frontend_network
+
+  backend_core:
     build:
       context: ./backend
     env_file:
@@ -11,22 +23,42 @@ services:
       - 8000:8000
     networks:
       - backend_db_network
+      - backend_core_network
     volumes:
       - ./backend:/app
+
   backend_db:
     image: postgres:15.1
     volumes:
-      - backend_db_volume:/var/lib/postgresql/data
+      - backend_core_db_volume:/var/lib/postgresql/data
     env_file:
-      - .env/.env_db
+      - ./.env/.env_db
     ports:
-      - 5433:5432
+      - 5432:5432
     networks:
       - backend_db_network
 
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - 3000:3000
+    stdin_open: true
+    volumes:
+      - ./frontend:/app/
+    networks:
+      - frontend_network
+      - backend_core_network
+
 volumes:
-  backend_db_volume:
+  backend_core_db_volume:
 
 networks:
   backend_db_network:
+    driver: bridge
+
+  frontend_network:
+    driver: bridge
+
+  backend_core_network:
     driver: bridge
