@@ -3,7 +3,7 @@ services:
     build:
       context: ./webserver
     ports:
-      - '8081:80'
+      - 8081:80
     depends_on:
       - backend_core
       - frontend
@@ -16,6 +16,7 @@ services:
       context: ./backend
     env_file:
       - .env/.env_db
+      - ./backend/.envs/.envs
     depends_on:
       - backend_db
     restart: on-failure
