@@ -46,7 +46,7 @@ exclude = '''
 '''
 
 [tool.flake8]
-ignore = ['E231', 'E241']
+ignore = ['E231', 'E241', 'F401']
 per-file-ignores = [
     '__init__.py:F401',
 ]
