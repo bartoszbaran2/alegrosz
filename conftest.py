@@ -2,14 +2,16 @@ import pytest
 from faker import Faker
 import faker_commerce
 from products.models import Product
+import factory
+from pytest_factoryboy import register
 
 fake = Faker("pl_PL")
 fake.add_provider(faker_commerce.Provider)
 
 
 @pytest.fixture
-def product():
-    """fixture for create product without save to DB.
+def product_onion():
+    """fixture for create product_onion without save to DB.
     :return: obj of Product class, representing row in table.
     :rtype: Product
     """
@@ -25,11 +27,26 @@ def product():
 
 
 @pytest.fixture
-def product_db(product, db):
-    """fixture for create product
+def product_db(product_onion, db):
+    """fixture for create product_onion
     :param: db: db fixture, adds db handling
     :return: obj of Product class, representing row in table.
     :rtype: Product
     """
-    product.save()
-    return product
+    product_onion.save()
+    return product_onion
+
+
+@pytest.fixture
+def api_request_factory():
+    from rest_framework.test import APIRequestFactory
+
+    return APIRequestFactory()
+
+
+@register
+class ProductFactory(factory.Factory):
+    class Meta:
+        model = Product
+
+    name = "Onion"
