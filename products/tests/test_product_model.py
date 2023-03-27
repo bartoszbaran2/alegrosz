@@ -21,18 +21,11 @@ def test_custom_slug(product, db):
     assert product_db.slug == "test-custom-slug"
 
 
-@pytest.mark.skip(reason="WIP")
-def test_custom_invalid_slug(db):
-    name = fake.ecommerce_name()
-    product = Product(
-        name=name,
-        description=fake.sentence(),
-        price=fake.ecommerce_price(),
-        image=fake.file_name(category="image", extension="png"),
-        stock_count=fake.unique.random_int(min=1, max=100),
-        barcode=fake.ean(length=13),
-        slug="test custom-slug",
-    )
+# @pytest.mark.skip(reason="WIP")
+def test_custom_invalid_slug(product, db):
+    product.name = "test  custom-slug"
+    product.save()
+
     assert product.slug == "test-custom-slug"
 
 
