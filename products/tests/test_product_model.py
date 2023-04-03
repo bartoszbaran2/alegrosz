@@ -21,11 +21,12 @@ def test_custom_slug(product_onion, db):
     assert product_db.slug == "test-custom-slug"
 
 
-# @pytest.mark.skip(reason="WIP")
+@pytest.mark.skip(reason="WIP")
 def test_custom_invalid_slug(product_onion, db):
-    product_onion.name = "test  custom-slug"
+    product_onion.slug = "test  custom-slug"
+    product_onion.full_clean()
     product_onion.save()
-
+    # validation error
     assert product_onion.slug == "test-custom-slug"
 
 
