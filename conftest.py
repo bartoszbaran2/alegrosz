@@ -1,7 +1,7 @@
 import pytest
 from faker import Faker
 import faker_commerce
-from products.models import Product
+from products.models import Product, Category
 import factory
 from pytest_factoryboy import register
 
@@ -60,3 +60,8 @@ class ProductFactory(factory.django.DjangoModelFactory):
 @pytest.fixture
 def products_batch(db):
     return ProductFactory.create_batch(60)
+
+
+@pytest.fixture
+def category_db(db):
+    return Category.objects.create(name="Potato")
