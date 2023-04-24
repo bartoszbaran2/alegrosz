@@ -3,8 +3,10 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from django_filters import rest_framework as filters
 
 from . import models, serializers
+from .filters import ProductFilter
 from .paginators import CustomPaginator
 from .permissions import IsAuthor, IsStuff, HasAddProduct
 
@@ -15,14 +17,27 @@ class ProductViewSet(ModelViewSet):
     parser_classes = [parsers.MultiPartParser, parsers.JSONParser]
     pagination_class = CustomPaginator
     permission_classes = (AllowAny, IsAuthor)
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = ProductFilter
 
     def list(self, request, *args, **kwargs):
-        products = self.serializer_class(self.get_queryset(), many=True)
-        page = self.paginate_queryset(self.get_queryset().order_by("-id"))
+        queryset = self.filterset_class(self.get_queryset())
+
+        # price_gt = request.query_params.get('price_gt')
+        # price_lt = request.query_params.get('price_lt')
+        #
+        # if price_gt is not None:
+        #     queryset = queryset.filter(price__gt=price_gt)
+        #
+        # if price_lt is not None:
+        #     queryset = queryset.filter(price__lt=price_lt)
+
+        page = self.paginate_queryset(queryset.order_by("-id"))
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
+        products = self.serializer_class(self.get_queryset(), many=True)
         return Response(data=products.data, status=status.HTTP_200_OK)
 
     def retrieve(self, request, *args, pk=None, **kwargs):
