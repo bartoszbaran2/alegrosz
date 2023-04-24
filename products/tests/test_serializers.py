@@ -9,7 +9,10 @@ def test_serializer_all_fields_present(product_db):
         "description",
         "price",
         "image",
+        "stock_count",
         "popularity",
         "rank",
         "barcode",
+        "categories",
+        "subcategories",
     )
