@@ -1,14 +1,23 @@
-from django.core.validators import BaseValidator
 from rest_framework.exceptions import ValidationError
 
 
 class CommentValidator:
-    def __call__(self, serializer, *args, **kwargs):
-        print("*" * 20)
-        print(serializer)
-        print("*" * 20)
-        product = serializer.data.get("product")
-        parent_comment = serializer.data.get("parent_comment")
+    requires_context = True
 
-        if product.id != parent_comment.product.id:
-            raise ValidationError("something is no yes")
+    def __call__(self, attrs, serializer, *args, **kwargs):
+        product_id = serializer.root.context.get("product_pk")
+        if product_id and product_id.isdigit():
+            product_id = int(product_id)
+
+        parent_comment = attrs.get("parent_comment")
+
+        if parent_comment is not None and parent_comment.product.id != product_id:
+            raise ValidationError("Cannot add subcomment to this comment")
+
+
+def profanity_check(value):
+    profane_words = ["kurwa", "chuj", "fuck"]
+
+    for word in profane_words:
+        if word in value:
+            raise ValidationError("Not allowed word!")

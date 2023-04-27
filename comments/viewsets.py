@@ -31,7 +31,7 @@ class CommentViewSet(ModelViewSet):
         pass
 
     def create(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.serializer_class(data=request.data, context={"product_pk": kwargs.get("product_pk")})
         serializer.is_valid(raise_exception=True)
         product = get_object_or_404(queryset=Product.objects.all(), pk=kwargs.get("product_pk"))
         serializer.save(author=request.user, product=product)
