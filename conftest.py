@@ -2,6 +2,8 @@ import pytest
 from django.contrib.auth import get_user_model
 from faker import Faker
 import faker_commerce
+
+from comments.models import Comment
 from products.models import Product, Category
 import factory
 from pytest_factoryboy import register
@@ -82,3 +84,13 @@ def products_batch(db):
 @pytest.fixture
 def category_db(db):
     return Category.objects.create(name="Potato")
+
+
+@pytest.fixture
+def comment_db(product_db, user):
+    return Comment.objects.create(product=product_db, author=user, content="test content")
+
+
+@pytest.fixture
+def subcomment_db(product_db, user, comment_db):
+    return Comment.objects.create(product=product_db, author=user, content="test content", parent_comment=comment_db)
