@@ -1,43 +1,39 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, parsers
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.templatetags import rest_framework
 from rest_framework.viewsets import ModelViewSet
-from django_filters import rest_framework as filters
 
-from . import models, serializers
+from . import models
+from . import serializers
 from .filters import ProductFilter
+from .mixins import CacheMixin
 from .paginators import CustomPaginator
-from .permissions import IsAuthor, IsStuff, HasAddProduct
+from .permissions import IsAuthor, HasAddProduct, IsStuff
 
 
-class ProductViewSet(ModelViewSet):
+class ProductViewSet(CacheMixin, ModelViewSet):
     queryset = models.Product.objects.all()
     serializer_class = serializers.ProductSerializer
     parser_classes = [parsers.MultiPartParser, parsers.JSONParser]
     pagination_class = CustomPaginator
     permission_classes = (AllowAny, IsAuthor)
-    filter_backends = (filters.DjangoFilterBackend,)
-    filterset_class = ProductFilter
+    # filter_backends = (DjangoFilterBackend, )
+    # filterset_class = ProductFilter
 
     def list(self, request, *args, **kwargs):
-        queryset = self.filterset_class(self.get_queryset())
-
-        # price_gt = request.query_params.get('price_gt')
-        # price_lt = request.query_params.get('price_lt')
-        #
-        # if price_gt is not None:
-        #     queryset = queryset.filter(price__gt=price_gt)
-        #
-        # if price_lt is not None:
-        #     queryset = queryset.filter(price__lt=price_lt)
+        # queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.get_queryset()
 
         page = self.paginate_queryset(queryset.order_by("-id"))
+
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        products = self.serializer_class(self.get_queryset(), many=True)
+        products = self.serializer_class(queryset, many=True)
         return Response(data=products.data, status=status.HTTP_200_OK)
 
     def retrieve(self, request, *args, pk=None, **kwargs):
@@ -48,7 +44,9 @@ class ProductViewSet(ModelViewSet):
         serializer = serializers.AddProductWithCategoriesAndSubcategoriesSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         product = serializer.create({**serializer.validated_data, "owner": request.user})
+
         product_serializer = serializers.ProductSerializer(product)
+
         return Response(product_serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, pk=None, **kwargs):
@@ -56,14 +54,16 @@ class ProductViewSet(ModelViewSet):
 
     def partial_update(self, request, *args, pk=None, **kwargs):
         instance = self.get_object()
-        serializer = self.get_serializer(instance=instance, data=request.data, partial=True)
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def destroy(self, request, *args, pk=None, **kwargs):
+    def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         self.perform_destroy(instance)
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_permissions(self):
